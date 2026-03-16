@@ -1,0 +1,30 @@
+{
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownLambdaType": "none",
+  "reportPossiblyUnboundVariable": "warning",
+  "reportDeprecated": "warning",
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning",
+  "include": [
+    "src/**/*.py",
+    "tests/**/*.py",
+    "tools/**/*.py"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.*",
+    "**/dist",
+    "**/build"
+  ],
+  "extraPaths": [
+    "src"
+  ]
+}

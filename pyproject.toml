@@ -1,0 +1,115 @@
+[tool.poetry]
+name = "meta-agent"
+version = "1.0.0"
+description = "MetaAgent元Agent自进化系统 - 企业级优化版本"
+authors = ["MetaAgent Team"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "meta_agent", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.54.0"
+tenacity = "^9.0.0"
+prometheus-client = "^0.21.0"
+opentelemetry-api = "^1.28.0"
+opentelemetry-sdk = "^1.28.0"
+redis = "^5.2.0"
+watchdog = "^6.0.0"
+pydantic = "^2.10.0"
+pydantic-settings = "^2.6.0"
+python-json-logger = "^3.3.0"
+pyyaml = "^6.0.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+pytest-asyncio = "^0.24.0"
+pytest-xdist = "^3.6.0"
+pytest-timeout = "^2.4.0"
+pytest-rerunfailures = "^14.0"
+faker = "^30.0.0"
+hypothesis = "^6.120.0"
+bandit = "^1.10.0"
+black = "^24.0.0"
+isort = "^5.13.0"
+flake8 = "^7.1.0"
+mypy = "^1.13.0"
+junitparser = "^3.2.0"
+coverage = "^7.10.0"
+autoflake = "^2.3.1"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = """
+    -v
+    --strict-markers
+    --tb=short
+    --color=yes
+    --cov=src/meta_agent
+    --cov-report=term-missing
+    --cov-report=html
+    --cov-report=xml
+    --cov-fail-under=80
+"""
+markers = [
+    "unit: 标记为单元测试",
+    "integration: 标记为集成测试",
+    "performance: 标记为性能测试",
+    "security: 标记为安全测试",
+    "slow: 标记为慢速测试",
+]
+junit_family = "xunit2"
+junitxml = "reports/pytest/results.xml"
+
+[tool.coverage.run]
+source = ["src/meta_agent"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/version.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+precision = 2
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+line-length = 100
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
