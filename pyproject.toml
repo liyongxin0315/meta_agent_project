@@ -1,11 +1,14 @@
 [tool.poetry]
 name = "meta-agent"
 version = "1.0.0"
-description = "MetaAgent元Agent自进化系统 - 企业级优化版本"
-authors = ["MetaAgent Team"]
+description = "MetaAgent 元 Agent 自进化系统 - 企业级优化版本"
+authors = ["liyongxin0315"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "meta_agent", from = "src" }]
+homepage = "https://github.com/liyongxin0315/meta_agent_project"
+repository = "https://github.com/liyongxin0315/meta_agent_project"
+keywords = ["agent", "ai", "automation", "llm", "meta-programming"]
 
 [tool.poetry.dependencies]
 python = "^3.10"

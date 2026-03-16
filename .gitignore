@@ -1,4 +1,4 @@
-# Python
+# Python 缓存
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,21 +6,25 @@ __pycache__/
 .Python
 .venv/
 venv/
-ENV/
 env/
+.env
 *.egg-info/
 dist/
 build/
 
-# Data & Logs
-data/
-logs/
-*.log
-reports/
-.snapshots/
-.cache/
+# 测试缓存
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
 
-# IDE
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.log
+
+# IDE 配置
 .vscode/
 .idea/
 *.swp
@@ -31,18 +35,17 @@ reports/
 .DS_Store
 Thumbs.db
 
-# Environment
-.env
-.env.local
-.env.*.local
+# 构建产物
+*.egg
+*.egg-info/
 
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
+# 临时文件
+tmp/
+temp/
+.cache/
 
-# Docs (文档目录不上传)
-ϵר/
-*.md
-!README.md
+# 敏感信息
+secrets/
+*.key
+*.pem
+!*.pub
