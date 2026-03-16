@@ -9,8 +9,10 @@ import pytest
 import os
 import sys
 
-# 添加源码路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# 添加 src 路径到 sys.path（适配 src 布局）
+src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
 
 @pytest.fixture(scope="session")
@@ -44,3 +46,13 @@ def mock_llm_client():
             return f"Mock response for: {prompt}"
     
     return MockLLMClient()
+
+
+@pytest.fixture(autouse=True)
+def setup_test_env():
+    """自动设置测试环境变量"""
+    os.environ["META_AGENT_ENV"] = "test"
+    os.environ["LOG_LEVEL"] = "DEBUG"
+    yield
+    # 清理环境变量
+    os.environ.pop("META_AGENT_ENV", None)

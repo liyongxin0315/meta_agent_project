@@ -12,7 +12,7 @@
     - 代码审查发现弃用警告时的批量修复
 
 使用方法：
-    python fix_datetime.py
+    python scripts/fix_datetime.py
 
 输入：
     预定义的需要修复的文件列表（files_to_fix）
@@ -37,17 +37,12 @@ import re
 from pathlib import Path
 
 # 项目根目录
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent
 
-# 需要修复的文件列表
-# TODO: 定期扫描 src/ 目录，自动发现需要修复的文件
+# 需要修复的文件列表（适配新目录结构）
 files_to_fix = [
-    project_root / "src" / "meta_agent" / "hotload" / "dynamic_registry.py",
-    project_root / "src" / "meta_agent" / "llm" / "batch_processor.py",
-    project_root / "src" / "meta_agent" / "core" / "event_bus.py",
-    project_root / "src" / "meta_agent" / "core" / "service_registry.py",
-    project_root / "src" / "meta_agent" / "hotload" / "hot_loader.py",
-    project_root / "src" / "meta_agent" / "llm" / "llm_cache.py",
+    project_root / "src" / "meta_agent" / "models" / "task.py",
+    project_root / "src" / "meta_agent" / "utils" / "helpers.py",
 ]
 
 

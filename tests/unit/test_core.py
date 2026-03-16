@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 单元测试 - 核心模块
+
+测试 src/meta_agent/core 下的模块。
 """
 
 import pytest

@@ -1,7 +1,36 @@
 {
   "pythonVersion": "3.10",
-  "pythonPlatform": "Windows",
+  "pythonPlatform": "all",
   "typeCheckingMode": "basic",
+  
+  "extraPaths": [
+    "src"
+  ],
+  
+  "include": [
+    "src/meta_agent/**/*.py",
+    "tests/**/*.py",
+    "scripts/**/*.py",
+    "tools/**/*.py"
+  ],
+  
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.*",
+    "**/dist",
+    "**/build",
+    "**/.venv",
+    "**/venv"
+  ],
+  
+  "ignore": [
+    "tests/",
+    "scripts/",
+    "docker/",
+    "tools/"
+  ],
+  
   "reportMissingImports": "warning",
   "reportMissingTypeStubs": "none",
   "reportUnknownMemberType": "none",
@@ -11,20 +40,5 @@
   "reportPossiblyUnboundVariable": "warning",
   "reportDeprecated": "warning",
   "reportUnusedImport": "warning",
-  "reportUnusedVariable": "warning",
-  "include": [
-    "src/**/*.py",
-    "tests/**/*.py",
-    "tools/**/*.py"
-  ],
-  "exclude": [
-    "**/__pycache__",
-    "**/node_modules",
-    "**/.*",
-    "**/dist",
-    "**/build"
-  ],
-  "extraPaths": [
-    "src"
-  ]
+  "reportUnusedVariable": "warning"
 }

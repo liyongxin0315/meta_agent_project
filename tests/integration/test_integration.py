@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 集成测试 - 跨模块交互
+
+测试 src/meta_agent 下多个模块的交互。
 """
 
 import pytest

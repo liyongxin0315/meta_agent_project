@@ -1,11 +1,7 @@
 # =============================================================================
-# MetaAgent Docker Compose 配置
+# MetaAgent Docker Compose - 开发环境
 # =============================================================================
-# 服务说明：
-#   - metaagent: 主应用服务（Python 3.10）
-#   - redis: 缓存和消息队列（Redis 7）
-#   - prometheus: 监控指标收集（Prometheus）
-#   - grafana: 可视化监控面板（Grafana）
+# 服务：MetaAgent + Redis + Prometheus + Grafana
 # =============================================================================
 
 version: '3.8'
@@ -14,43 +10,37 @@ services:
   # ---------------------------------------------------------------------------
   # MetaAgent 主应用
   # ---------------------------------------------------------------------------
-  # 端口：9090 (Prometheus 指标)
-  # 依赖：Redis (缓存/消息队列)
-  # ---------------------------------------------------------------------------
   metaagent:
     build:
-      context: .
-      target: production
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: metaagent
     ports:
-      - "9090:9090"  # Prometheus 指标端口
+      - "8000:8000"  # HTTP API
+      - "9090:9090"  # Prometheus 指标
     environment:
-      # 运行环境配置
-      - META_AGENT_ENVIRONMENT=production
-      - META_AGENT_LOG_LEVEL=INFO
+      # 运行环境
+      - META_AGENT_ENV=development
+      - LOG_LEVEL=DEBUG
       # LLM API 密钥（从 .env 文件读取）
-      - META_AGENT_LLM_API_KEY=${OPENAI_API_KEY}
+      - LLM_API_KEY=${LLM_API_KEY}
+      # Redis 配置
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
-      # 数据持久化
+      # 挂载源码（开发模式热重载）
+      - ../src:/app/src
+      - ../config:/app/config
       - ./data:/app/data
       - ./logs:/app/logs
     networks:
       - metaagent-network
-    restart: unless-stopped  # 容器异常退出时自动重启
-    healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
     depends_on:
       - redis
 
   # ---------------------------------------------------------------------------
   # Redis 缓存服务
-  # ---------------------------------------------------------------------------
-  # 端口：6379 (Redis 默认端口)
-  # 用途：缓存、消息队列、会话存储
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
@@ -58,17 +48,14 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data  # AOF 持久化数据
+      - redis-data:/data
     networks:
       - metaagent-network
     restart: unless-stopped
-    command: redis-server --appendonly yes  # 启用 AOF 持久化
+    command: redis-server --appendonly yes
 
   # ---------------------------------------------------------------------------
   # Prometheus 监控服务
-  # ---------------------------------------------------------------------------
-  # 端口：9091 (外部访问) -> 9090 (容器内部)
-  # 用途：收集应用指标、告警
   # ---------------------------------------------------------------------------
   prometheus:
     image: prom/prometheus:latest
@@ -76,8 +63,8 @@ services:
     ports:
       - "9091:9090"
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus  # 监控数据持久化
+      - ../config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     networks:
       - metaagent-network
     restart: unless-stopped
@@ -85,20 +72,16 @@ services:
   # ---------------------------------------------------------------------------
   # Grafana 可视化面板
   # ---------------------------------------------------------------------------
-  # 端口：3000 (Web 界面)
-  # 默认账号：admin / admin123（首次登录后请修改）
-  # ---------------------------------------------------------------------------
   grafana:
     image: grafana/grafana:latest
     container_name: metaagent-grafana
     ports:
       - "3000:3000"
     environment:
-      # 管理员账号（生产环境请修改默认密码）
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     volumes:
-      - grafana-data:/var/lib/grafana  # 面板配置持久化
+      - grafana-data:/var/lib/grafana
     networks:
       - metaagent-network
     restart: unless-stopped
@@ -109,13 +92,13 @@ services:
 # 数据卷定义
 # =============================================================================
 volumes:
-  redis-data:      # Redis 数据
-  prometheus-data: # Prometheus 监控数据
-  grafana-data:    # Grafana 面板配置
+  redis-data:
+  prometheus-data:
+  grafana-data:
 
 # =============================================================================
 # 网络配置
 # =============================================================================
 networks:
   metaagent-network:
-    driver: bridge  # 桥接网络，容器间可互相访问
+    driver: bridge
