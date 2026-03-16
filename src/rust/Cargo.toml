@@ -1,0 +1,30 @@
+[package]
+name = "meta_agent_rust"
+version = "0.1.0"
+edition = "2021"
+authors = ["liyongxin0315"]
+description = "MetaAgent Rust 核心模块 - 高性能扩展"
+license = "MIT"
+repository = "https://github.com/liyongxin0315/meta_agent_project"
+
+[lib]
+name = "meta_agent_rust"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.20", features = ["extension-module"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3

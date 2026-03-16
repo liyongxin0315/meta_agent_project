@@ -1,143 +1,284 @@
-name: CI Pipeline
+# =============================================================================
+# MetaAgent CI/CD - 跨平台 + 混合语言自动化
+# =============================================================================
+# 测试平台：Linux/Windows/macOS
+# 语言：Python/Go/Rust
+# =============================================================================
+
+name: CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+  GO_VERSION: "1.21"
+  PYTHON_VERSION: "3.10"
+  RUST_VERSION: "1.75"
 
 jobs:
-  lint:
-    name: Code Linting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --with dev
-      
-      - name: Run Black
-        run: poetry run black --check src/ tests/
-      
-      - name: Run isort
-        run: poetry run isort --check src/ tests/
-      
-      - name: Run Flake8
-        run: poetry run flake8 src/ tests/
-      
-      - name: Run MyPy
-        run: poetry run mypy src/
-
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    needs: lint
+  # ---------------------------------------------------------------------------
+  # Python 测试
+  # ---------------------------------------------------------------------------
+  test-python:
+    name: Python Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11']
-    
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      
-      - name: Install dependencies
+
+      - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
           pip install poetry
           poetry install --with dev
-      
-      - name: Create reports directory
-        run: mkdir -p reports/pytest reports/coverage
-      
-      - name: Run unit tests
-        run: poetry run pytest tests/unit/ -v --cov=src/meta_agent --cov-report=term --cov-report=html:reports/coverage --cov-report=xml:reports/coverage/coverage.xml
-      
-      - name: Run integration tests
-        run: poetry run pytest tests/integration/ -v
-      
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-reports
-          path: reports/
-          retention-days: 30
 
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: lint
-    
+      - name: 代码检查
+        run: |
+          poetry run flake8 src/python/ tests/
+          poetry run black --check src/python/ tests/
+          poetry run isort --check-only src/python/ tests/
+
+      - name: 类型检查
+        run: |
+          poetry run mypy src/python/
+
+      - name: 运行测试
+        run: |
+          poetry run pytest tests/ -v --tb=short --cov=src/python \
+            --cov-report=xml --cov-report=term-missing
+
+      - name: 上传覆盖率
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: python
+          name: python-${{ matrix.os }}-${{ matrix.python-version }}
+
+  # ---------------------------------------------------------------------------
+  # Go 测试
+  # ---------------------------------------------------------------------------
+  test-go:
+    name: Go Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: ["1.21", "1.22"]
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: 下载依赖
+        run: |
+          cd src/go
+          go mod download
+
+      - name: 代码检查
+        run: |
+          cd src/go
+          go vet ./...
+          gofmt -d .
+
+      - name: 运行测试
+        run: |
+          cd src/go
+          go test -v -race -coverprofile=coverage.out ./...
+
+      - name: 上传覆盖率
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./src/go/coverage.out
+          flags: go
+          name: go-${{ matrix.os }}-${{ matrix.go-version }}
+
+      - name: 构建测试
+        run: |
+          cd src/go
+          CGO_ENABLED=0 go build -o /dev/null ./cmd/main.go
+
+  # ---------------------------------------------------------------------------
+  # Rust 测试
+  # ---------------------------------------------------------------------------
+  test-rust:
+    name: Rust Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust-version: ["1.75", "stable", "beta"]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          components: rustfmt, clippy
+          profile: minimal
+
+      - name: 缓存 Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/rust/target
+          key: ${{ runner.os }}-cargo-${{ matrix.rust-version }}-${{ hashFiles('src/rust/Cargo.lock') }}
+
+      - name: 代码检查
+        run: |
+          cd src/rust
+          cargo fmt -- --check
+          cargo clippy -- -D warnings
+
+      - name: 运行测试
+        run: |
+          cd src/rust
+          cargo test --verbose
+
+      - name: 构建测试
+        run: |
+          cd src/rust
+          cargo build --release
+
+      - name: 上传覆盖率
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          args: '--out Xml'
+          working-directory: src/rust
+
+  # ---------------------------------------------------------------------------
+  # 跨语言集成测试
+  # ---------------------------------------------------------------------------
+  test-integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: [test-python, test-go, test-rust]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 设置 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: 设置 Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: 安装依赖
         run: |
-          python -m pip install --upgrade pip
           pip install poetry
           poetry install --with dev
-      
-      - name: Create reports directory
-        run: mkdir -p reports/bandit
-      
-      - name: Run Bandit security scan
-        run: poetry run bandit -r src/ -f json -o reports/bandit/results.json || true
-      
-      - name: Upload security reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-reports
-          path: reports/
-          retention-days: 30
 
-  quality-gate:
-    name: Quality Gate
+      - name: 构建所有模块
+        run: |
+          make all
+
+      - name: 运行集成测试
+        run: |
+          poetry run pytest tests/integration/ -v
+
+  # ---------------------------------------------------------------------------
+  # Docker 构建
+  # ---------------------------------------------------------------------------
+  build-docker:
+    name: Docker Build
     runs-on: ubuntu-latest
-    needs: [test, security]
-    
+    needs: [test-integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 构建并推送
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: build/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            liyongxin0315/meta_agent:latest
+            liyongxin0315/meta_agent:${{ github.sha }}
+          cache-from: type=registry,ref=liyongxin0315/meta_agent:buildcache
+          cache-to: type=registry,ref=liyongxin0315/meta_agent:buildcache,mode=max
+
+  # ---------------------------------------------------------------------------
+  # 发布
+  # ---------------------------------------------------------------------------
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [test-integration]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 构建 Python 包
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --with dev
-      
-      - name: Download test artifacts
-        uses: actions/download-artifact@v4
+          pip install build
+          python -m build
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: coverage-reports
-          path: reports/
-      
-      - name: Run quality gate
-        run: |
-          echo "Quality gate passed!"
-      
-      - name: Quality gate summary
-        run: |
-          echo "## Quality Gate Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Coverage >= 80%" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Security scan completed" >> $GITHUB_STEP_SUMMARY
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          generate_release_notes: true
+
+      - name: 发布到 PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
