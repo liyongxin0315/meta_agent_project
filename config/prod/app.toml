@@ -1,0 +1,29 @@
+# MetaAgent 生产环境配置
+
+[app]
+name = "MetaAgent"
+version = "1.0.0"
+environment = "production"
+debug = false
+
+[logging]
+level = "INFO"
+format = "json"
+
+[llm]
+# API 密钥从环境变量读取
+base_url = "https://api.openai.com/v1"
+model = "gpt-4"
+timeout = 60
+max_retries = 3
+
+[redis]
+host = "${REDIS_HOST}"
+port = 6379
+db = 0
+password = "${REDIS_PASSWORD}"
+
+[server]
+host = "0.0.0.0"
+port = 8000
+workers = 4

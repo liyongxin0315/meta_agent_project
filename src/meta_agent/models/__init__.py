@@ -1,38 +1,10 @@
 """
-数据模型模块
-包含系统状态、进化记录等数据模型
+MetaAgent 数据模型
+
+包含实体类、DTO、数据库模型等。
 """
 
-from meta_agent.models.evolution import (
-    Defect,
-    Modification,
-    EvolutionRecord,
-    StateSnapshot,
-    EvolutionAction,
-    EvolutionActionType,
-    ModificationStatus,
-)
-from meta_agent.models.state import (
-    SystemState,
-    VersionInfo,
-    ResourceUsage,
-    SystemStatus,
-    SecurityStatus,
-    LearningStatus,
-)
+from .task import Task, TaskStatus, TaskResult
+from .agent import Agent, AgentState
 
-__all__ = [
-    "Defect",
-    "Modification",
-    "EvolutionRecord",
-    "StateSnapshot",
-    "EvolutionAction",
-    "EvolutionActionType",
-    "ModificationStatus",
-    "SystemState",
-    "VersionInfo",
-    "ResourceUsage",
-    "SystemStatus",
-    "SecurityStatus",
-    "LearningStatus",
-]
+__all__ = ["Task", "TaskStatus", "TaskResult", "Agent", "AgentState"]

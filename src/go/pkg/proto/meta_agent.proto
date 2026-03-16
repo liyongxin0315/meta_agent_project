@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package meta_agent;
+
+option go_package = "./pkg/proto";
+option java_multiple_files = true;
+
+// =============================================================================
+// MetaAgent gRPC 服务定义
+// =============================================================================
+
+// 任务执行服务
+service TaskExecutor {
+  // 执行单个任务
+  rpc ExecuteTask(TaskRequest) returns (TaskResponse);
+  
+  // 批量执行任务
+  rpc ExecuteTaskBatch(TaskBatchRequest) returns (TaskBatchResponse);
+  
+  // 流式任务执行
+  rpc ExecuteTaskStream(stream TaskRequest) returns (stream TaskResponse);
+  
+  // 健康检查
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// =============================================================================
+// 消息定义
+// =============================================================================
+
+// 任务请求
+message TaskRequest {
+  string task_id = 1;
+  string content = 2;
+  uint32 priority = 3;
+  map<string, string> metadata = 4;
+  uint64 timeout_ms = 5;
+}
+
+// 任务响应
+message TaskResponse {
+  bool success = 1;
+  string task_id = 2;
+  string result = 3;
+  string error_message = 4;
+  uint64 processing_time_ms = 5;
+  map<string, string> metadata = 6;
+}
+
+// 批量任务请求
+message TaskBatchRequest {
+  repeated TaskRequest tasks = 1;
+  bool parallel = 2;
+}
+
+// 批量任务响应
+message TaskBatchResponse {
+  repeated TaskResponse responses = 1;
+  uint64 total_time_ms = 2;
+  uint32 success_count = 3;
+  uint32 failed_count = 4;
+}
+
+// 健康检查请求
+message HealthCheckRequest {
+  string service_name = 1;
+}
+
+// 健康检查响应
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+    SERVICE_UNKNOWN = 3;
+  }
+  
+  ServingStatus status = 1;
+  string message = 2;
+  uint64 timestamp = 3;
+}

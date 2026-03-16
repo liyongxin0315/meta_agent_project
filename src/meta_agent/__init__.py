@@ -1,24 +1,14 @@
 """
-MetaAgent元Agent自进化系统 - 企业级优化版本
+MetaAgent - 元 Agent 自进化系统
+
+企业级自进化系统，具备自主学习、自我修复和持续优化能力。
 """
 
 __version__ = "1.0.0"
-__author__ = "MetaAgent Team"
+__author__ = "liyongxin0315"
+__email__ = "liyongxin0315@example.com"
 
-__all__ = [
-    "__version__",
-    "__author__",
-]
+from .core import Core
+from .utils import helpers
 
-
-def __getattr__(name):
-    """延迟导入避免循环依赖"""
-    if name in ("MetaAgentSystem", "get_system", "set_system"):
-        from meta_agent.main import MetaAgentSystem, get_system, set_system
-        globals()["MetaAgentSystem"] = MetaAgentSystem
-        globals()["get_system"] = get_system
-        globals()["set_system"] = set_system
-        if "MetaAgentSystem" not in __all__:
-            __all__.extend(["MetaAgentSystem", "get_system", "set_system"])
-        return locals()[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+__all__ = ["Core", "helpers"]
